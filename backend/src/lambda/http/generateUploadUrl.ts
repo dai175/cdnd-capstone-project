@@ -8,7 +8,6 @@ import { cors } from 'middy/middlewares'
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId
 
-  // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
   const todosAccess = new TodosAccess()
   const url = await todosAccess.generateUploadUrl(todoId)
 

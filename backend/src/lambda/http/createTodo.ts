@@ -14,7 +14,6 @@ const logger = createLogger('createTodo')
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const newTodo: CreateTodoRequest = JSON.parse(event.body)
 
-  // TODO: Implement creating a new TODO item
   logger.info('Processing event: ', event)
 
   try {

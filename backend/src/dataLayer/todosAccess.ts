@@ -12,7 +12,7 @@ export class TodosAccess {
 
   constructor(
     private readonly docClient: DocumentClient = new XAWS.DynamoDB.DocumentClient(),
-    private readonly s3 = new AWS.S3({
+    private readonly s3: AWS.S3 = new XAWS.S3({
       signatureVersion: 'v4'
     }),
     private readonly todosTable = process.env.TODOS_TABLE,

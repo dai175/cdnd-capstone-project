@@ -10,7 +10,6 @@ import { cors } from 'middy/middlewares'
 const logger = createLogger('getTodos')
 
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  // TODO: Get all TODO items for a current user
   logger.info('Processing event: ', event)
 
   try {

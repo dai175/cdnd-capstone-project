@@ -11,7 +11,7 @@ import {
   Icon,
   Input,
   Image,
-  Loader
+  Loader, Label
 } from 'semantic-ui-react'
 
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
@@ -27,29 +27,34 @@ interface TodosState {
   todos: Todo[]
   newTodoName: string
   loadingTodos: boolean
+  dueDate: string
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    dueDate: ''
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ newTodoName: event.target.value })
   }
 
-  onEditButtonClick = (todoId: string) => {
+  handleDueDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ dueDate: this.calculateDueDate(event.target.value) })
+  }
+
+  onAttachButtonClick = (todoId: string) => {
     this.props.history.push(`/todos/${todoId}/edit`)
   }
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
-      const dueDate = this.calculateDueDate()
       const newTodo = await createTodo(this.props.auth.getIdToken(), {
         name: this.state.newTodoName,
-        dueDate
+        dueDate: this.state.dueDate
       })
       this.setState({
         todos: [...this.state.todos, newTodo],
@@ -71,6 +76,24 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     }
   }
 
+  onTodoEdit = async (pos: number) => {
+    try {
+      const todo = this.state.todos[pos]
+      await patchTodo(this.props.auth.getIdToken(), todo.todoId, {
+        name: todo.name,
+        dueDate: this.state.dueDate,
+        done: !todo.done
+      })
+      this.setState({
+        todos: update(this.state.todos, {
+          [pos]: { dueDate: { $set: this.state.dueDate } }
+        })
+      })
+    } catch {
+      alert('Todo edit failed')
+    }
+  }
+
   onTodoCheck = async (pos: number) => {
     try {
       const todo = this.state.todos[pos]
@@ -85,7 +108,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         })
       })
     } catch {
-      alert('Todo deletion failed')
+      alert('Todo done failed')
     }
   }
 
@@ -130,6 +153,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
             placeholder="To change the world..."
             onChange={this.handleNameChange}
           />
+          <Input type="date" name="dueDate" onChange={this.handleDueDateChange} />
         </Grid.Column>
         <Grid.Column width={16}>
           <Divider />
@@ -168,7 +192,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                   checked={todo.done}
                 />
               </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle">
+              <Grid.Column width={9} verticalAlign="middle">
                 {todo.name}
               </Grid.Column>
               <Grid.Column width={3} floated="right">
@@ -178,9 +202,18 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 <Button
                   icon
                   color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
+                  onClick={() => this.onAttachButtonClick(todo.todoId)}
                 >
                   <Icon name="pencil" />
+                </Button>
+              </Grid.Column>
+              <Grid.Column width={1} floated="right">
+                <Button
+                  icon
+                  color="green"
+                  onClick={() => this.onTodoEdit(pos)}
+                >
+                  <Icon name="calendar" />
                 </Button>
               </Grid.Column>
               <Grid.Column width={1} floated="right">
@@ -205,9 +238,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     )
   }
 
-  calculateDueDate(): string {
-    const date = new Date()
-    date.setDate(date.getDate() + 7)
+  calculateDueDate(date: string): string {
 
     return dateFormat(date, 'yyyy-mm-dd') as string
   }
